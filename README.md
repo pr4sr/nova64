@@ -2,6 +2,8 @@
 
 a custom 64-bit virtual computer architecture designed from the ground up to explore computer architecture, instruction set design, and low-level systems programming.
 
+![image](https://i.imgur.com/M0zplVQ.png)
+
 ## overview
 
 nova64 is a risc-inspired 64-bit virtual machine ecosystem featuring a custom instruction set architecture, cpu emulator, assembler toolchain, and experimental operating environment.
@@ -41,3 +43,4 @@ novaos environment
 future development goals include expanding the operating environment, improving hardware abstraction, adding more advanced system features, and exploring compiler support.
 
 documentation and technical design notes are available in the `docs` directory.
+
