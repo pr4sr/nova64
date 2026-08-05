@@ -34,17 +34,24 @@ public:
 private:
     struct parsed_line {
         std::string label;
+        std::string directive;
         std::string mnemonic;
         std::vector<std::string> operands;
         std::string original;
     };
 
     std::string read_file(const std::string& path) const;
-    std::vector<std::string> split(const std::string& line) const;
-    std::vector<parsed_line> parse_lines(const std::string& source, const std::string& base_path) const;
-    std::vector<byte_t> encode_instruction(const std::string& mnemonic, const std::vector<std::string>& operands) const;
+    std::vector<std::string> split_operands(const std::string& line) const;
+    std::vector<parsed_line> parse_lines(const std::string& source) const;
+    std::vector<std::uint32_t> encode_mnemonic(const std::string& mnemonic, const std::vector<std::string>& operands,
+                                               const std::unordered_map<std::string, word_t>& symbols,
+                                               word_t address) const;
+    std::vector<std::uint32_t> expand_loadimm(std::uint8_t rd, word_t value) const;
     std::optional<word_t> resolve_immediate(const std::string& token, const std::unordered_map<std::string, word_t>& symbols) const;
     std::optional<std::uint8_t> parse_register(const std::string& token) const;
+    std::vector<std::string> tokenize_operand_list(const std::string& text) const;
+    std::pair<std::uint8_t, std::int16_t> parse_memory_operand(const std::string& token,
+                                                               const std::unordered_map<std::string, word_t>& symbols) const;
 };
 
 class disassembler {
