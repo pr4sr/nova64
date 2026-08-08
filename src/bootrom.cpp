@@ -7,7 +7,8 @@ namespace nova64 {
 void boot_rom(memory& mem, cpu& cpu, kernel& kernel) {
     mem.write64(kStackBase, 0);
     cpu.write_register(1, kKernelBase);
-    cpu.write_register(2, kStackBase);
+    cpu.write_register(31, kStackBase);
+    cpu.write_csr(kCsrEha, kKernelBase + 0x100);
     kernel.log("boot rom complete");
 }
 }  // namespace nova64

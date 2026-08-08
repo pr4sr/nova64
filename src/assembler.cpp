@@ -495,6 +495,24 @@ std::vector<std::uint32_t> assembler::encode_mnemonic(const std::string& mnemoni
         inst.op = opcode::dbg;
         return {encode_instruction(inst)};
     }
+    if (mnemonic == "csrr") {
+        require(2);
+        inst.op = opcode::csrr;
+        inst.rd = reg(0);
+        inst.rs1 = static_cast<std::uint8_t>(imm(1));
+        return {encode_instruction(inst)};
+    }
+    if (mnemonic == "csrw") {
+        require(2);
+        inst.op = opcode::csrw;
+        inst.rd = static_cast<std::uint8_t>(imm(0));
+        inst.rs1 = reg(1);
+        return {encode_instruction(inst)};
+    }
+    if (mnemonic == "eret") {
+        inst.op = opcode::eret;
+        return {encode_instruction(inst)};
+    }
 
     throw std::runtime_error("unsupported mnemonic: " + mnemonic);
 }
@@ -507,6 +525,9 @@ executable assembler::assemble(const std::string& source_path) {
 
     const auto lines = parse_lines(source);
     std::unordered_map<std::string, word_t> symbols;
+    symbols["epc"] = 0;
+    symbols["eha"] = 1;
+    symbols["ecause"] = 2;
     word_t address = 0x1000;
 
     auto instruction_size = [&](const parsed_line& line) -> word_t {
@@ -581,6 +602,9 @@ executable assembler::assemble(const std::string& source_path) {
     for (int iteration = 0; iteration < 8; ++iteration) {
         address = 0x1000;
         std::unordered_map<std::string, word_t> next_symbols;
+        next_symbols["epc"] = 0;
+        next_symbols["eha"] = 1;
+        next_symbols["ecause"] = 2;
         for (const auto& line : lines) {
             if (!line.label.empty()) {
                 next_symbols[line.label] = address;

@@ -28,19 +28,23 @@ int main(int argc, char** argv) {
         return 2;
     }
 
+    // lambda to assemble and run a file.
     const auto run_program = [&](const std::string& path) -> int {
         assembler as;
         try {
+            // assemble the source file into an executable.
             const auto exe = as.assemble(path);
             std::cout << "[nova] assembling input file: " << path << "\n";
             std::cout << "[nova] assembled " << exe.sections.size() << " section(s)\n";
+            
+            // extract the compiled bytes.
             std::vector<byte_t> code = exe.sections.front().bytes;
             std::cout << "[nova] loading " << code.size() << " bytes into memory at 0x1000\n";
             mem.load_bytes(0x1000, code);
             core.reset();
             core.set_max_steps(10000);
             core.write_register(0, 0x1000);
-            core.write_register(1, 0x2000);
+            core.write_register(31, 0x2000);
 
             std::cout << "[nova] starting execution loop\n";
             while (core.running()) {
@@ -59,11 +63,13 @@ int main(int argc, char** argv) {
         }
     };
 
+    // if no file provided, drop into the shell.
     if (argc < 2) {
         std::cout << "[nova] entering integrated kernel shell\n";
         os.shell();
         return 0;
     }
 
+    // otherwise, run the file.
     return run_program(argv[1]);
 }

@@ -22,6 +22,10 @@ constexpr std::uint64_t kRngAddr = 0xF000'0020ULL;
 constexpr std::uint64_t kRtcAddr = 0xF000'0030ULL;
 constexpr std::uint64_t kStorageAddr = 0xF000'0040ULL;
 
+constexpr std::uint16_t kCsrEpc = 0x00;
+constexpr std::uint16_t kCsrEha = 0x01;
+constexpr std::uint16_t kCsrEcause = 0x02;
+
 enum class opcode : std::uint8_t {
     nop = 0x00,
     mov = 0x01,
@@ -50,7 +54,10 @@ enum class opcode : std::uint8_t {
     ret = 0x26,
     syscall = 0x30,
     hlt = 0x31,
-    dbg = 0x32
+    dbg = 0x32,
+    csrr = 0x33,
+    csrw = 0x34,
+    eret = 0x35
 };
 
 struct flags_t {
@@ -116,6 +123,9 @@ inline std::string opcode_name(opcode op) {
         case opcode::syscall: return "syscall";
         case opcode::hlt: return "hlt";
         case opcode::dbg: return "dbg";
+        case opcode::csrr: return "csrr";
+        case opcode::csrw: return "csrw";
+        case opcode::eret: return "eret";
     }
     return "unknown";
 }

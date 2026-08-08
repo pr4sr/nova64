@@ -12,6 +12,8 @@
 #include <vector>
 
 namespace nova64 {
+
+// handles all memory operations, including mmio.
 class memory {
 public:
     explicit memory(std::size_t size = kMemorySize);
@@ -36,6 +38,7 @@ private:
     mmio_handler mmio_handler_;
 };
 
+// main cpu emulator core. handles execution and registers.
 class cpu {
 public:
     cpu(memory& mem);
@@ -54,6 +57,8 @@ public:
     std::array<word_t, 32> registers() const;
     word_t read_register(std::uint8_t index) const;
     void write_register(std::uint8_t index, word_t value);
+    word_t read_csr(std::uint8_t index) const;
+    void write_csr(std::uint8_t index, word_t value);
     word_t cycle_count() const;
     bool running() const;
     std::vector<std::string> trace_log() const;
@@ -63,11 +68,12 @@ public:
 private:
     void update_flags(word_t result, word_t lhs, word_t rhs, bool subtract);
     bool execute_instruction(const instruction_t& inst);
+    void trigger_exception(std::uint16_t cause);
 
     memory& mem_;
     std::array<word_t, 32> gpr_{};
+    std::array<word_t, 8> csr_{};
     word_t pc_{};
-    word_t sp_{};
     word_t lr_{};
     word_t flags_{};
     std::uint8_t privilege_{};
@@ -81,6 +87,7 @@ private:
     std::function<void(cpu&, memory&)> syscall_handler_;
 };
 
+// bundles cpu and memory into a single vm instance.
 class virtual_machine {
 public:
     explicit virtual_machine(std::size_t memory_size = kMemorySize);

@@ -82,10 +82,10 @@ cpu::cpu(memory& mem) : mem_(mem) { reset(); }
 
 void cpu::reset() {
     gpr_.fill(0);
+    csr_.fill(0);
     pc_ = 0x1000;
     executed_steps_ = 0;
     max_steps_ = 100000;
-    sp_ = kStackBase;
     lr_ = 0;
     flags_ = 0;
     privilege_ = 0;
@@ -115,19 +115,24 @@ bool cpu::step() {
         return false;
     }
 
-    const auto inst_word = mem_.read32(pc_);
-    const instruction_t inst = decode_instruction(inst_word);
-    pc_ += 4;
-    ++cycles_;
-    ++executed_steps_;
-    const bool ok = execute_instruction(inst);
-    if (!ok) {
-        running_ = false;
+    try {
+        const auto inst_word = mem_.read32(pc_);
+        const instruction_t inst = decode_instruction(inst_word);
+        pc_ += 4;
+        ++cycles_;
+        ++executed_steps_;
+        const bool ok = execute_instruction(inst);
+        if (!ok) {
+            running_ = false;
+        }
+        if (trace_enabled_) {
+            trace_log_.push_back(opcode_name(inst.op) + " @ " + std::to_string(pc_));
+        }
+        return ok;
+    } catch (const std::out_of_range&) {
+        trigger_exception(0x01); // 0x01 = memory fault
+        return true;
     }
-    if (trace_enabled_) {
-        trace_log_.push_back(opcode_name(inst.op) + " @ " + std::to_string(pc_));
-    }
-    return ok;
 }
 
 void cpu::set_syscall_handler(std::function<void(cpu&, memory&)> handler) { syscall_handler_ = std::move(handler); }
@@ -138,12 +143,14 @@ bool cpu::trace() const { return trace_enabled_; }
 void cpu::set_max_steps(std::uint64_t max_steps) { max_steps_ = max_steps; }
 std::uint64_t cpu::max_steps() const { return max_steps_; }
 word_t cpu::pc() const { return pc_; }
-word_t cpu::sp() const { return sp_; }
+word_t cpu::sp() const { return gpr_[31]; }
 word_t cpu::lr() const { return lr_; }
 word_t cpu::flags() const { return flags_; }
 std::array<word_t, 32> cpu::registers() const { return gpr_; }
 word_t cpu::read_register(std::uint8_t index) const { return gpr_[index]; }
 void cpu::write_register(std::uint8_t index, word_t value) { gpr_[index] = value; }
+word_t cpu::read_csr(std::uint8_t index) const { return csr_[index]; }
+void cpu::write_csr(std::uint8_t index, word_t value) { csr_[index] = value; }
 word_t cpu::cycle_count() const { return cycles_; }
 bool cpu::running() const { return running_; }
 std::vector<std::string> cpu::trace_log() const { return trace_log_; }
@@ -153,8 +160,18 @@ void cpu::update_flags(word_t result, word_t lhs, word_t rhs, bool subtract) {
     f.zero = (result == 0);
     f.sign = (result & (1ULL << 63)) != 0;
     f.carry = subtract ? (lhs < rhs) : (lhs > (std::numeric_limits<word_t>::max() - rhs));
-    f.overflow = false;
+    if (subtract) {
+        f.overflow = ((lhs ^ rhs) & (lhs ^ result) & (1ULL << 63)) != 0;
+    } else {
+        f.overflow = (~(lhs ^ rhs) & (lhs ^ result) & (1ULL << 63)) != 0;
+    }
     flags_ = (f.zero ? 1ULL : 0) | (f.sign ? 2ULL : 0) | (f.carry ? 4ULL : 0) | (f.overflow ? 8ULL : 0);
+}
+
+void cpu::trigger_exception(std::uint16_t cause) {
+    csr_[kCsrEcause] = cause;
+    csr_[kCsrEpc] = pc_;
+    pc_ = csr_[kCsrEha];
 }
 
 bool cpu::execute_instruction(const instruction_t& inst) {
@@ -180,7 +197,8 @@ bool cpu::execute_instruction(const instruction_t& inst) {
             break;
         case opcode::div:
             if (gpr_[inst.rs2] == 0) {
-                return false;
+                trigger_exception(0x02); // 0x02 = divide by zero
+                break;
             }
             gpr_[inst.rd] = gpr_[inst.rs1] / gpr_[inst.rs2];
             break;
@@ -218,12 +236,12 @@ bool cpu::execute_instruction(const instruction_t& inst) {
             mem_.write64(gpr_[inst.rs1] + inst.imm, gpr_[inst.rd]);
             break;
         case opcode::push:
-            sp_ -= 8;
-            mem_.write64(sp_, gpr_[inst.rd]);
+            gpr_[31] -= 8;
+            mem_.write64(gpr_[31], gpr_[inst.rd]);
             break;
         case opcode::pop:
-            gpr_[inst.rd] = mem_.read64(sp_);
-            sp_ += 8;
+            gpr_[inst.rd] = mem_.read64(gpr_[31]);
+            gpr_[31] += 8;
             break;
         case opcode::jmp:
             pc_ = gpr_[inst.rs1] + inst.imm;
@@ -265,6 +283,22 @@ bool cpu::execute_instruction(const instruction_t& inst) {
             break;
         case opcode::dbg:
             trace_enabled_ = true;
+            break;
+        case opcode::csrr:
+            if (inst.rs1 < csr_.size()) {
+                gpr_[inst.rd] = csr_[inst.rs1];
+            }
+            break;
+        case opcode::csrw:
+            if (inst.rd < csr_.size()) {
+                csr_[inst.rd] = gpr_[inst.rs1];
+            }
+            break;
+        case opcode::eret:
+            pc_ = csr_[kCsrEpc];
+            break;
+        default:
+            trigger_exception(0x03); // invalid opcode
             break;
     }
     return true;

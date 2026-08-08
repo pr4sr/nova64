@@ -18,6 +18,7 @@ struct process_entry {
     std::string state;
 };
 
+// basic filesystem implementation for the kernel.
 class filesystem {
 public:
     void mkdir(const std::string& path);
@@ -36,6 +37,7 @@ private:
     std::string cwd_ = "/";
 };
 
+// integrated operating system shell and kernel.
 class kernel {
 public:
     explicit kernel(memory& mem, cpu& cpu);

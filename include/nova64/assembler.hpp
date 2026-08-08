@@ -10,12 +10,15 @@
 #include <vector>
 
 namespace nova64 {
+
+// holds data for a symbol in the assembly code.
 struct symbol_entry {
     std::string name;
     word_t address{};
     std::string section;
 };
 
+// the final assembled executable output.
 struct executable {
     struct section {
         std::string name;
@@ -27,6 +30,7 @@ struct executable {
     word_t entry_address{};
 };
 
+// parses assembly text into machine code.
 class assembler {
 public:
     executable assemble(const std::string& source_path);

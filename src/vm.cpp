@@ -6,7 +6,7 @@ virtual_machine::virtual_machine(std::size_t memory_size) : mem_(memory_size), c
 void virtual_machine::load_program(const std::vector<byte_t>& bytes, word_t entry) {
     mem_.load_bytes(entry, bytes);
     core_.write_register(0, entry);
-    core_.write_register(1, kStackBase);
+    core_.write_register(31, kStackBase);
 }
 
 void virtual_machine::run(std::size_t max_steps) {
