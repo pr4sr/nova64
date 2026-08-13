@@ -10,6 +10,9 @@
 - memory-mapped i/o
 - simple boot and exception system
 - control and status registers (csrs)
+- hardware breakpoints and step execution limits
+- instruction tracing and execution logging
+- custom system call handlers
 
 ## registers
 
