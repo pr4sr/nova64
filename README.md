@@ -1,45 +1,24 @@
 # nova64
 
-> a custom 64-bit virtual computer architecture. designed to explore computer architecture, instruction set design, and low-level systems programming.
+a custom 64-bit virtual machine with its own instruction set, assembler, executable format, and experimental os.
 
-![image](https://i.imgur.com/M0zplVQ.png)
+![nova64](https://i.imgur.com/M0zplVQ.png)
 
-## overview
+## about
 
-nova64 is a risc-inspired 64-bit virtual machine ecosystem. it features a custom isa, cpu emulator, assembler toolchain, and an experimental operating environment.
+nova64 is a risc-inspired architecture project built from the ground up. it includes a cpu emulator, a custom isa, an assembler and disassembler, memory-mapped i/o, and a small operating environment called novaos.
 
-made to understand computers from the hardware abstraction level upward. from instruction encoding and memory models to boot processes and system software.
+the project focuses on understanding how the pieces of a computer fit together, from instruction encoding and cpu execution to memory, booting, and system software.
 
-## features
+## what's inside
 
-* **isa:** custom 64-bit risc-inspired instruction set.
-* **cpu:** modular cpu and virtual machine core.
-* **encoding:** custom instruction encoding and decoding system.
-* **toolchain:** assembler and disassembler tools.
-* **executable:** custom executable format.
-* **memory:** mapped subsystem with mmio support.
-* **boot:** boot rom initialization flow.
-* **os:** experimental cli operating system environment.
-* **docs:** example assembly programs and technical notes.
+- **custom isa** — a 64-bit, risc-inspired instruction set.
+- **cpu & vm** — instruction execution and virtual machine core.
+- **assembler / disassembler** — tools for working with nova64 assembly.
+- **executable format** — a custom format for assembled programs.
+- **memory subsystem** — memory mapping and mmio support.
+- **boot rom** — initialization and boot flow.
+- **novaos** — an experimental cli environment running on the vm.
+- **documentation** — assembly examples, design notes, and technical details.
 
-## architecture flow
-
-```text
-assembly source
-       ↓
-   assembler
-       ↓
-executable format
-       ↓
- virtual machine
-       ↓
-cpu core & memory
-       ↓
-novaos environment
-```
-
-## goals
-
-future development goals include expanding the operating environment, improving hardware abstraction, adding more advanced system features, and exploring compiler support.
-
-check the `docs` directory for more info and technical design notes.
+for implementation details and examples, see [`docs/`](./docs/).
