@@ -8,8 +8,6 @@ a custom 64-bit virtual machine with its own instruction set, assembler, executa
 
 nova64 is a risc-inspired architecture project built from the ground up. it includes a cpu emulator, a custom isa, an assembler and disassembler, memory-mapped i/o, and a small operating environment called novaos.
 
-the project focuses on understanding how the pieces of a computer fit together, from instruction encoding and cpu execution to memory, booting, and system software.
-
 ## what's inside
 
 - **custom isa** — a 64-bit, risc-inspired instruction set.
